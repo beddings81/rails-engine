@@ -1,19 +1,18 @@
 class Api::V1::ItemsController < ApplicationController
   def index
     items = Item.all
-    require 'pry'; binding.pry
-    # if items == nil
-    #   render :json => { :errors => Item.errors.full_messages }
-    # else
     #merchant items
-      if params[:merchant_id]
-        merchant = Merchant.find(params[:merchant_id])
-        render json: ItemSerializer.new(merchant.items, merchant)
+    if params[:merchant_id]
+      merchant = Merchant.find(params[:merchant_id])
+      render json: ItemSerializer.new(merchant.items, merchant)
     #items
-      else
+    else
+      if !items.empty?
         render json: ItemSerializer.new(items)
+      else
+        render :json => { "message": "The query could not be completed", :errors => ["There are no items in the database"] }, status: 404
       end
-    # end
+    end
   end
 
   def show
@@ -21,7 +20,7 @@ class Api::V1::ItemsController < ApplicationController
       item = Item.find(params[:id])
       render json: ItemSerializer.new(item)
     else
-      render json: { "message": "your query could not be completed", :errors => ["Item does not exist"] }, status: 404
+      render json: { "message": "The query could not be completed", :errors => ["Item does not exist"] }, status: 404
     end
   end
 end
