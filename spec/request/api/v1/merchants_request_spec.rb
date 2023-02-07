@@ -1,28 +1,49 @@
 require 'rails_helper'
 
 describe 'Merchant API', type: :request do
-  it 'sends a list of items' do
-    create_list(:merchant, 3)
+  describe 'merchants index' do
+    describe 'happy path' do
+      it 'sends a list of items' do
+        create_list(:merchant, 3)
 
-    get '/api/v1/merchants'
+        get '/api/v1/merchants'
 
-    expect(response).to be_successful
+        expect(response).to be_successful
 
-    merchants = JSON.parse(response.body, symbolize_names: true)
-    
-    expect(merchants).to have_key(:data)
-    expect(merchants[:data]).to be_a(Array)
-    expect(merchants[:data].count).to eq(3)
+        merchants = JSON.parse(response.body, symbolize_names: true)
+        
+        expect(merchants).to have_key(:data)
+        expect(merchants[:data]).to be_a(Array)
+        expect(merchants[:data].count).to eq(3)
 
-    merchants[:data].each do |merchant|
-      expect(merchant).to have_key(:id)
-      expect(merchant[:id]).to be_an(String)
+        merchants[:data].each do |merchant|
+          expect(merchant).to have_key(:id)
+          expect(merchant[:id]).to be_an(String)
 
-      expect(merchant).to have_key(:attributes)
-      expect(merchant[:attributes]).to be_a(Hash)
+          expect(merchant).to have_key(:attributes)
+          expect(merchant[:attributes]).to be_a(Hash)
 
-      expect(merchant[:attributes]).to have_key(:name)
-      expect(merchant[:attributes][:name]).to be_a(String)
+          expect(merchant[:attributes]).to have_key(:name)
+          expect(merchant[:attributes][:name]).to be_a(String)
+        end
+      end
+    end
+
+    describe 'sad path' do
+      it 'returns an error when theres no merchants in the database' do
+        get '/api/v1/merchants'
+
+        expect(response).to_not be_successful
+
+        merchants = JSON.parse(response.body, symbolize_names: true)
+
+        expect(merchants).to have_key(:message)
+        expect(merchants[:message]).to eq("The query could not be completed")
+
+        expect(merchants).to have_key(:errors)
+        expect(merchants[:errors]).to be_a(Array)
+        expect(merchants[:errors][0]).to eq("There are no merchants in the database")
+      end
     end
   end
 
