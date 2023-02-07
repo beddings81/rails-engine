@@ -15,7 +15,7 @@ gem 'puma', '~> 3.11'
 # gem 'redis', '~> 4.0'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
-
+gem 'jsonapi-serializer'
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
 
@@ -31,7 +31,12 @@ gem 'bootsnap', '>= 1.1.0', require: false
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
+  gem 'rspec-rails'
   gem 'simplecov'
+  gem 'pry'
+  gem 'factory_bot_rails'
+  gem 'faker', :git => 'https://github.com/faker-ruby/faker.git', :branch => 'main'
+  gem 'shoulda-matchers', '~> 5.0'
 end
 
 group :development do
