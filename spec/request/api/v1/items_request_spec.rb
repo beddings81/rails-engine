@@ -39,7 +39,7 @@ describe 'Items API', type: :request do
     end
 
     describe 'sad path' do
-      it 'returns an empty array when theres no items in the database' do
+      it 'returns an error when theres no items in the database' do
         get '/api/v1/items'
         
         expect(response).to_not be_successful
@@ -52,7 +52,6 @@ describe 'Items API', type: :request do
         expect(items).to have_key(:errors)
         expect(items[:errors]).to be_a(Array)
         expect(items[:errors][0]).to eq("There are no items in the database")
-        
       end
     end
   end
