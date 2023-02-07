@@ -47,23 +47,47 @@ describe 'Merchant API', type: :request do
     end
   end
 
-  it 'returns one merchant' do
-    merchant = create(:merchant)
+  describe 'merchants show' do
+    describe 'happy path' do
+      it 'returns one merchant' do
+        merchant = create(:merchant)
 
-    get "/api/v1/merchants/#{merchant.id}"
+        get "/api/v1/merchants/#{merchant.id}"
 
-    expect(response).to be_successful
+        expect(response).to be_successful
 
-    merchants = JSON.parse(response.body, symbolize_names: true)
+        merchants = JSON.parse(response.body, symbolize_names: true)
 
-    expect(merchants).to have_key(:data)
-    expect(merchants[:data]).to be_a(Hash)
+        expect(merchants).to have_key(:data)
+        expect(merchants[:data]).to be_a(Hash)
 
-    expect(merchants[:data]).to have_key(:attributes)
-    expect(merchants[:data][:attributes]).to be_a(Hash)
-    
-    expect(merchants[:data][:attributes]).to have_key(:name)
-    expect(merchants[:data][:attributes][:name]).to be_a(String)
+        expect(merchants[:data]).to have_key(:attributes)
+        expect(merchants[:data][:attributes]).to be_a(Hash)
+        
+        expect(merchants[:data][:attributes]).to have_key(:name)
+        expect(merchants[:data][:attributes][:name]).to be_a(String)
+      end
+    end
+
+    describe 'sad path' do
+      it 'returns an error if the merchant does not exist' do
+        merchant = create(:merchant)
+
+        get "/api/v1/merchants/#{merchant.id+1}"
+
+        expect(response).to_not be_successful
+
+        merchant = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response.status).to eq(404)
+
+        expect(merchant).to have_key(:message)
+        expect(merchant[:message]).to eq("The query could not be completed")
+
+        expect(merchant).to have_key(:errors)
+        expect(merchant[:errors][0]).to eq("Merchant does not exist")
+      end
+    end
   end
 
   it 'returns a merchants items' do
