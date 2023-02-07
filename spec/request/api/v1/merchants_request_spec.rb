@@ -90,43 +90,67 @@ describe 'Merchant API', type: :request do
     end
   end
 
-  it 'returns a merchants items' do
-    merchant = create(:merchant)
-    items = create_list(:item, 5, merchant: merchant)
+  describe 'merchant item index' do
+    describe 'happy path' do
+      it 'returns a merchants items' do
+        merchant = create(:merchant)
+        items = create_list(:item, 5, merchant: merchant)
 
-    get "/api/v1/merchants/#{merchant.id}/items"
+        get "/api/v1/merchants/#{merchant.id}/items"
 
-    expect(response).to be_successful
+        expect(response).to be_successful
 
-    merchant_items = JSON.parse(response.body, symbolize_names: true)
+        merchant_items = JSON.parse(response.body, symbolize_names: true)
 
-    expect(merchant_items).to have_key(:data)
-    expect(merchant_items[:data]).to be_a(Array)
-    
-    merchant_items[:data].each do |item|
-      expect(item).to have_key(:id)
-      expect(item[:id]).to be_a(String)
+        expect(merchant_items).to have_key(:data)
+        expect(merchant_items[:data]).to be_a(Array)
+        
+        merchant_items[:data].each do |item|
+          expect(item).to have_key(:id)
+          expect(item[:id]).to be_a(String)
 
-      expect(item).to have_key(:type)
-      expect(item[:type]).to eq("item")
+          expect(item).to have_key(:type)
+          expect(item[:type]).to eq("item")
 
-      expect(item).to have_key(:attributes)
-      expect(item[:attributes]).to be_a(Hash)
+          expect(item).to have_key(:attributes)
+          expect(item[:attributes]).to be_a(Hash)
 
-      expect(item[:attributes]).to have_key(:name)
-      expect(item[:attributes][:name]).to be_a(String)
+          expect(item[:attributes]).to have_key(:name)
+          expect(item[:attributes][:name]).to be_a(String)
 
-      expect(item[:attributes]).to have_key(:unit_price)
-      expect(item[:attributes][:unit_price]).to be_a(Float)
-
-
-      expect(item[:attributes]).to have_key(:description)
-      expect(item[:attributes][:description]).to be_a(String)
+          expect(item[:attributes]).to have_key(:unit_price)
+          expect(item[:attributes][:unit_price]).to be_a(Float)
 
 
-      expect(item[:attributes]).to have_key(:merchant_id)
-      expect(item[:attributes][:merchant_id]).to be_a(Integer)
-      expect(item[:attributes][:merchant_id]).to eq(merchant.id)
+          expect(item[:attributes]).to have_key(:description)
+          expect(item[:attributes][:description]).to be_a(String)
+
+
+          expect(item[:attributes]).to have_key(:merchant_id)
+          expect(item[:attributes][:merchant_id]).to be_a(Integer)
+          expect(item[:attributes][:merchant_id]).to eq(merchant.id)
+        end
+      end
+    end
+
+    describe 'sad path' do
+      it 'returns an error if the merchant does not exist' do
+        merchant = create(:merchant)
+
+        get "/api/v1/merchants/#{merchant.id+1}/items"
+
+        expect(response).to_not be_successful
+
+        merchant = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response.status).to eq(404)
+
+        expect(merchant).to have_key(:message)
+        expect(merchant[:message]).to eq("The query could not be completed")
+
+        expect(merchant).to have_key(:errors)
+        expect(merchant[:errors][0]).to eq("Merchant does not exist")
+      end
     end
   end
 end
