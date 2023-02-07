@@ -94,8 +94,6 @@ describe 'Items API', type: :request do
 
         expect(item[:data][:attributes]).to have_key(:description)
         expect(item[:data][:attributes][:description]).to be_a(String)
-
-        
       end
     end
 
@@ -112,7 +110,7 @@ describe 'Items API', type: :request do
         expect(response.status).to eq(404)
 
         expect(item).to have_key(:message)
-        expect(item[:message]).to eq("your query could not be completed")
+        expect(item[:message]).to eq("The query could not be completed")
 
         expect(item).to have_key(:errors)
         expect(item[:errors][0]).to eq("Item does not exist")
