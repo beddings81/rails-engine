@@ -178,6 +178,15 @@ describe 'Items API', type: :request do
         post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
 
         expect(response).to_not be_successful
+        expect(response.status).to eq(404)
+
+        rb = JSON.parse(response.body, symbolize_names: true)
+
+        expect(rb).to have_key(:message)
+        expect(rb[:message]).to eq("The item could not be created")
+
+        expect(rb).to have_key(:errors)
+        expect(rb[:errors][0]).to eq("Attributes can't be blank")
       end
     end
   end
