@@ -304,6 +304,47 @@ describe 'Items API', type: :request do
 
         expect(rb).to have_key(:errors)
         expect(rb[:errors][0]).to eq("Item does not exist")
+      end
+    end
+  end
+
+  describe 'item merchant relationship' do
+    describe 'happy path' do
+      it 'returns the merchant associated with the item' do
+        item = create(:item)
+
+        get "/api/v1/items/#{item.id}/merchant"
+
+        expect(response).to be_successful
+        
+        rb = JSON.parse(response.body, symbolize_names: true)
+
+        expect(rb).to have_key(:data)
+        expect(rb[:data]).to be_a(Hash)
+
+        expect(rb[:data]).to have_key(:id)
+        expect(rb[:data]).to have_key(:type)
+        expect(rb[:data]).to have_key(:attributes)
+      end
+    end
+
+    describe 'sad path' do
+      it 'returns an error if the item is not found' do
+        item = create(:item)
+
+        get "/api/v1/items/#{item.id+1}/merchant"
+        #+1 wont work with new error handling
+        expect(response).to_not be_successful
+
+        rb = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response.status).to eq(404)
+
+        expect(rb).to have_key(:message)
+        expect(rb[:message]).to eq("The query could not be completed")
+
+        expect(rb).to have_key(:errors)
+        expect(rb[:errors][0]).to eq("Item does not exist")
 
       end
     end
