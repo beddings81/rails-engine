@@ -47,6 +47,20 @@ class Api::V1::ItemsController < ApplicationController
     end
   end
 
+  def destroy
+    if Item.exists?(params[:id])
+      item = Item.find(params[:id])
+      item.invoices.each do |invoice|
+        if invoice.only_item?
+          invoice.destroy
+        end
+      end
+      item.destroy
+    else
+      render json: { "message": "The query could not be completed", :errors => ["Item does not exist"] }, status: 404
+    end
+  end
+
   private
 
     def item_params
