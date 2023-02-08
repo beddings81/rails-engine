@@ -37,6 +37,16 @@ class Api::V1::ItemsController < ApplicationController
     end
   end
 
+  def update
+    item = Item.find(params[:id])
+    item.update(item_params)
+    if item.save
+       render json: ItemSerializer.new(item)
+    else
+      render json: { "message": "The item could not be updated", :errors => ["Attributes can't be blank"] }, status: 404
+    end
+  end
+
   private
 
     def item_params
