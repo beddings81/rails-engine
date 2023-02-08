@@ -27,4 +27,19 @@ class Api::V1::ItemsController < ApplicationController
       render json: { "message": "The query could not be completed", :errors => ["Item does not exist"] }, status: 404
     end
   end
+
+  def create
+    new_item = Item.create(item_params)
+    if new_item.save
+      render json: ItemSerializer.new(new_item), status: :created
+    else
+      render json: { "message": "The item could not be created", :errors => ["Attributes can't be blank"] }, status: 404
+    end
+  end
+
+  private
+
+    def item_params
+      params.require(:item).permit(:id, :name, :description, :unit_price, :merchant_id)
+    end
 end
