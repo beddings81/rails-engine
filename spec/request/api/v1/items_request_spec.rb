@@ -259,6 +259,51 @@ describe 'Items API', type: :request do
 
         expect(rb).to have_key(:errors)
         expect(rb[:errors][0]).to eq("Attributes can't be blank")
+      end
+    end
+  end
+
+  describe 'item delete' do
+    describe 'happy path' do
+      it 'can delete an item and any invoice where its the only item' do
+        merchant = create(:merchant)
+        customer = Customer.create!(first_name: "Johnny", last_name: "Bravo")
+        item = create(:item)
+        item2 = create(:item)
+        invoice1 = Invoice.create!(status: "shipped", merchant_id: merchant.id, customer_id: customer.id)
+        invoice2 = Invoice.create!(status: "pending", merchant_id: merchant.id, customer_id: customer.id)
+
+        invoice_item = InvoiceItem.create!(unit_price: 10.99, item_id: item.id, invoice_id: invoice1.id, quantity: 2)
+        invoice_item2 = InvoiceItem.create!(unit_price: 12.38, item_id: item2.id, invoice_id: invoice1.id, quantity: 2)
+        invoice_item3 = InvoiceItem.create!(unit_price: 5.99, item_id: item2.id, invoice_id: invoice2.id, quantity: 2)
+
+        expect(Invoice.count).to eq(2)
+
+        delete "/api/v1/items/#{item2.id}"
+
+        expect(response).to be_successful
+        expect(response.status).to eq(204)
+        expect(Invoice.count).to eq(1)
+      end
+    end
+    
+    describe 'sad path' do
+      it 'returns an error if the item is not found' do
+        item = create(:item)
+
+        delete "/api/v1/items/#{item.id+1}"
+        #+1 wont work with new error handling
+        expect(response).to_not be_successful
+
+        rb = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response.status).to eq(404)
+
+        expect(rb).to have_key(:message)
+        expect(rb[:message]).to eq("The query could not be completed")
+
+        expect(rb).to have_key(:errors)
+        expect(rb[:errors][0]).to eq("Item does not exist")
 
       end
     end
