@@ -178,6 +178,78 @@ describe 'Items API', type: :request do
         post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
 
         expect(response).to_not be_successful
+      end
+    end
+  end
+
+  describe 'item update' do
+    describe 'happy path' do
+      it 'can update an existing item' do
+        id = create(:item).id
+        previous_name = Item.last.name
+        item_params = { name: "New Name" }
+        headers = {"CONTENT_TYPE" => "application/json"}
+  
+        patch "/api/v1/items/#{id}", headers: headers, params: JSON.generate({item: item_params})
+
+        item = Item.find_by(id: id)
+
+        expect(item.name).to_not eq(previous_name)
+
+        expect(response).to be_successful
+
+        rb = JSON.parse(response.body, symbolize_names: true)
+
+        expect(rb).to have_key(:data)
+        expect(rb[:data]).to be_a(Hash)
+
+        expect(rb[:data]).to have_key(:id)
+        expect(rb[:data][:id]).to be_a(String)
+
+        expect(rb[:data]).to have_key(:type)
+        expect(rb[:data][:type]).to be_a(String)
+        expect(rb[:data][:type]).to eq("item")
+
+        expect(rb[:data]).to have_key(:attributes)
+        expect(rb[:data][:attributes]).to be_a(Hash)
+
+        expect(rb[:data][:attributes]).to have_key(:name)
+        expect(rb[:data][:attributes][:name]).to be_a(String)
+        
+        expect(rb[:data][:attributes]).to have_key(:unit_price)
+        expect(rb[:data][:attributes][:unit_price]).to be_a(Float)
+        
+        expect(rb[:data][:attributes]).to have_key(:merchant_id)
+        expect(rb[:data][:attributes][:merchant_id]).to be_a(Integer)
+        
+        expect(rb[:data][:attributes]).to have_key(:description)
+        expect(rb[:data][:attributes][:description]).to be_a(String)
+
+      end
+    end
+
+    describe 'sad path' do
+      it 'returns an error if attributes are blank' do
+        id = create(:item).id
+        previous_name = Item.last.name
+        item_params = { name: "" }
+        headers = {"CONTENT_TYPE" => "application/json"}
+  
+        patch "/api/v1/items/#{id}", headers: headers, params: JSON.generate({item: item_params})
+
+        item = Item.find_by(id: id)
+
+        expect(item.name).to eq(previous_name)
+        expect(response).to_not be_successful
+        expect(response.status).to eq(404)
+
+        rb = JSON.parse(response.body, symbolize_names: true)
+
+        expect(rb).to have_key(:message)
+        expect(rb[:message]).to eq("The item could not be updated")
+
+        expect(rb).to have_key(:errors)
+        expect(rb[:errors][0]).to eq("Attributes can't be blank")
 
       end
     end
