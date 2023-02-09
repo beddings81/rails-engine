@@ -171,12 +171,45 @@ describe 'Merchant API', type: :request do
       expect(rb[:data]).to have_key(:attributes)
     end
 
-    it 'returns an empty hashif no merchant is found' do
+    it 'returns an error if no merchant is found' do
       Merchant.create!(name: "party usa")
 
       get "/api/v1/merchants/find?name=z"
 
-      expect(response).to be_successful
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
+    end
+
+    it 'returns an error if no param is found' do
+      Merchant.create!(name: "party usa")
+      Merchant.create!(name: "party canada")
+
+      get "/api/v1/merchants/find?name="
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
+    end
+
+    it 'returns an error if no param is found' do
+      Merchant.create!(name: "party usa")
+      Merchant.create!(name: "party canada")
+
+      get "/api/v1/merchants/find"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
 
       rb = JSON.parse(response.body, symbolize_names: true)
 

@@ -349,4 +349,14 @@ describe 'Items API', type: :request do
       end
     end
   end
+
+  describe 'find all items' do
+    xit 'returns all items that match the seach query' do
+      create_list(:item, 10)
+
+      get "/api/v1/items/find_all?name=ring"
+
+      expect(response).to be_successful
+    end
+  end
 end
