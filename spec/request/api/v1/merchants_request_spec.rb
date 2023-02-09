@@ -153,4 +153,36 @@ describe 'Merchant API', type: :request do
       end
     end
   end
+
+  describe 'find one merchant' do
+    it 'returns a single merchant based off search params' do
+       create_list(:merchant, 100)
+      
+      get "/api/v1/merchants/find?name=O"
+
+      expect(response).to be_successful
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+      
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to have_key(:id)
+      expect(rb[:data]).to have_key(:type)
+      expect(rb[:data]).to have_key(:attributes)
+    end
+
+    it 'returns an empty hashif no merchant is found' do
+      Merchant.create!(name: "party usa")
+
+      get "/api/v1/merchants/find?name=z"
+
+      expect(response).to be_successful
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
+    end
+  end
 end
