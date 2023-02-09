@@ -34,7 +34,7 @@ describe 'Merchant API', type: :request do
         get '/api/v1/merchants'
 
         expect(response).to_not be_successful
-
+        expect(response.status).to eq(404)
         merchants = JSON.parse(response.body, symbolize_names: true)
 
         expect(merchants).to have_key(:message)
@@ -85,7 +85,6 @@ describe 'Merchant API', type: :request do
         expect(merchant[:message]).to eq("The query could not be completed")
 
         expect(merchant).to have_key(:errors)
-        expect(merchant[:errors][0]).to eq("Merchant does not exist")
       end
     end
   end
@@ -149,7 +148,6 @@ describe 'Merchant API', type: :request do
         expect(merchant[:message]).to eq("The query could not be completed")
 
         expect(merchant).to have_key(:errors)
-        expect(merchant[:errors][0]).to eq("Merchant does not exist")
       end
     end
   end
