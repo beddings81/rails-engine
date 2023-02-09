@@ -9,4 +9,16 @@ class Item < ApplicationRecord
     .where('lower(name) like ?', "%#{query.downcase}%")
     .order(:name)
   end
+
+  def self.find_all_by_min_price(min)
+    Item
+    .where('unit_price > ?', min)
+    .order(:name)
+  end
+
+  def self.find_all_by_max_price(max)
+    Item
+    .where('unit_price < ?', max)
+    .order(:name)
+  end
 end
