@@ -49,4 +49,17 @@ RSpec.describe Item, type: :model do
       expect(Item.find_all_by_max_price(500.24)).to eq([item2, item1, item3])
     end
   end
+
+  describe '#find_all_in_price_range' do
+    it 'returns items that are less than the max price' do
+      merchant = Merchant.create!(name: "Wonderland")
+      item1 = Item.create(name:"Turing", description: "description", unit_price: 25.99, merchant_id: merchant.id)
+      item2 = Item.create(name:"Silver Ring", description: "description", unit_price: 50.00, merchant_id: merchant.id)
+      item3 = Item.create(name:"thing 3", description: "description", unit_price: 150.12, merchant_id: merchant.id)
+      item4 = Item.create(name:"not included", description: "description", unit_price: 500.25, merchant_id: merchant.id)
+
+      expect(Item.find_all_in_price_range(50, 200)).to eq([item2, item3])
+      expect(Item.find_all_in_price_range(100, 550)).to eq([item4, item3])
+    end
+  end
 end
