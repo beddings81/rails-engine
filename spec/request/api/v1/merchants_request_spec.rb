@@ -34,7 +34,7 @@ describe 'Merchant API', type: :request do
         get '/api/v1/merchants'
 
         expect(response).to_not be_successful
-
+        expect(response.status).to eq(404)
         merchants = JSON.parse(response.body, symbolize_names: true)
 
         expect(merchants).to have_key(:message)
@@ -42,7 +42,7 @@ describe 'Merchant API', type: :request do
 
         expect(merchants).to have_key(:errors)
         expect(merchants[:errors]).to be_a(Array)
-        expect(merchants[:errors][0]).to eq("There are no merchants in the database")
+        expect(merchants[:errors][0]).to eq("The database is empty")
       end
     end
   end
@@ -85,7 +85,6 @@ describe 'Merchant API', type: :request do
         expect(merchant[:message]).to eq("The query could not be completed")
 
         expect(merchant).to have_key(:errors)
-        expect(merchant[:errors][0]).to eq("Merchant does not exist")
       end
     end
   end
@@ -149,8 +148,72 @@ describe 'Merchant API', type: :request do
         expect(merchant[:message]).to eq("The query could not be completed")
 
         expect(merchant).to have_key(:errors)
-        expect(merchant[:errors][0]).to eq("Merchant does not exist")
       end
+    end
+  end
+
+  describe 'find one merchant' do
+    it 'returns a single merchant based off search params' do
+       create_list(:merchant, 100)
+      
+      get "/api/v1/merchants/find?name=O"
+
+      expect(response).to be_successful
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+      
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to have_key(:id)
+      expect(rb[:data]).to have_key(:type)
+      expect(rb[:data]).to have_key(:attributes)
+    end
+
+    it 'returns an error if no merchant is found' do
+      Merchant.create!(name: "party usa")
+
+      get "/api/v1/merchants/find?name=z"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
+    end
+
+    it 'returns an error if no param is found' do
+      Merchant.create!(name: "party usa")
+      Merchant.create!(name: "party canada")
+
+      get "/api/v1/merchants/find?name="
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
+    end
+
+    it 'returns an error if no param is found' do
+      Merchant.create!(name: "party usa")
+      Merchant.create!(name: "party canada")
+
+      get "/api/v1/merchants/find"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
     end
   end
 end

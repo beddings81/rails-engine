@@ -51,7 +51,7 @@ describe 'Items API', type: :request do
 
         expect(items).to have_key(:errors)
         expect(items[:errors]).to be_a(Array)
-        expect(items[:errors][0]).to eq("There are no items in the database")
+        expect(items[:errors][0]).to eq("The database is empty")
       end
     end
   end
@@ -112,7 +112,7 @@ describe 'Items API', type: :request do
         expect(item[:message]).to eq("The query could not be completed")
 
         expect(item).to have_key(:errors)
-        expect(item[:errors][0]).to eq("Item does not exist")
+        expect(item[:errors]).to be_a(Array)
       end
     end
   end
@@ -183,10 +183,10 @@ describe 'Items API', type: :request do
         rb = JSON.parse(response.body, symbolize_names: true)
 
         expect(rb).to have_key(:message)
-        expect(rb[:message]).to eq("The item could not be created")
+        expect(rb[:message]).to eq("The query could not be completed")
 
         expect(rb).to have_key(:errors)
-        expect(rb[:errors][0]).to eq("Attributes can't be blank")
+        expect(rb[:errors][0]).to eq("Validation failed: Description can't be blank")
       end
     end
   end
@@ -255,10 +255,10 @@ describe 'Items API', type: :request do
         rb = JSON.parse(response.body, symbolize_names: true)
 
         expect(rb).to have_key(:message)
-        expect(rb[:message]).to eq("The item could not be updated")
+        expect(rb[:message]).to eq("The query could not be completed")
 
         expect(rb).to have_key(:errors)
-        expect(rb[:errors][0]).to eq("Attributes can't be blank")
+        expect(rb[:errors][0]).to eq("Validation failed: Name can't be blank")
       end
     end
   end
@@ -292,7 +292,7 @@ describe 'Items API', type: :request do
         item = create(:item)
 
         delete "/api/v1/items/#{item.id+1}"
-        #+1 wont work with new error handling
+
         expect(response).to_not be_successful
 
         rb = JSON.parse(response.body, symbolize_names: true)
@@ -303,7 +303,6 @@ describe 'Items API', type: :request do
         expect(rb[:message]).to eq("The query could not be completed")
 
         expect(rb).to have_key(:errors)
-        expect(rb[:errors][0]).to eq("Item does not exist")
       end
     end
   end
@@ -333,7 +332,7 @@ describe 'Items API', type: :request do
         item = create(:item)
 
         get "/api/v1/items/#{item.id+1}/merchant"
-        #+1 wont work with new error handling
+
         expect(response).to_not be_successful
 
         rb = JSON.parse(response.body, symbolize_names: true)
@@ -344,9 +343,159 @@ describe 'Items API', type: :request do
         expect(rb[:message]).to eq("The query could not be completed")
 
         expect(rb).to have_key(:errors)
-        expect(rb[:errors][0]).to eq("Item does not exist")
-
       end
+    end
+  end
+
+  describe 'find all items' do
+    it 'returns all items that match the name seach query' do
+      create_list(:item, 100)
+
+      get "/api/v1/items/find_all?name=o"
+
+      expect(response).to be_successful
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+      
+      expect(rb).to have_key(:data)
+
+      rb[:data].each do |item|
+        expect(item).to have_key(:id)
+        expect(item).to have_key(:type)
+        expect(item).to have_key(:attributes)
+      end
+    end
+  
+    it 'returns all items that match the min price seach query' do
+      create_list(:item, 100)
+
+      get "/api/v1/items/find_all?min_price=50"
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      rb[:data].each do |item|
+        expect(item).to have_key(:id)
+        expect(item).to have_key(:type)
+        expect(item).to have_key(:attributes)
+      end
+    end
+
+    it 'returns all items that match the max price seach query' do
+      create_list(:item, 1000)
+
+      get "/api/v1/items/find_all?max_price=20"
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+      
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      rb[:data].each do |item|
+        expect(item).to have_key(:id)
+        expect(item).to have_key(:type)
+        expect(item).to have_key(:attributes)
+      end
+    end
+
+    it 'returns all items that match the max price seach query' do
+      create_list(:item, 1000)
+
+      get "/api/v1/items/find_all?min_price=10&max_price=20"
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      rb[:data].each do |data|
+        expect(data).to have_key(:id)
+        expect(data).to have_key(:type)
+        expect(data).to have_key(:attributes)
+      end
+    end
+
+    it 'returns an error if no param is found' do
+      create_list(:item, 10)
+
+      get "/api/v1/items/find_all"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
+    end
+
+    it 'returns an error if the min param is less than zero' do
+      create_list(:item, 10)
+
+      get "/api/v1/items/find_all?min_price=-1"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:errors)
+
+      expect(rb[:errors]).to eq({})
+    end
+
+    it 'returns an error if the max param is less than zero' do
+      create_list(:item, 10)
+
+      get "/api/v1/items/find_all?max_price=-1"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:errors)
+
+      expect(rb[:errors]).to eq({})
+    end
+
+    it 'returns an error if the min param and name param are present' do
+      create_list(:item, 10)
+
+      get "/api/v1/items/find_all?min_price=0&name=ring"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:errors)
+
+      expect(rb[:errors]).to eq({})
+    end
+
+    it 'returns an error if the name param is empty' do
+      create_list(:item, 10)
+
+      get "/api/v1/items/find_all?name="
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+
+      rb = JSON.parse(response.body, symbolize_names: true)
+
+      expect(rb).to have_key(:data)
+
+      expect(rb[:data]).to eq({})
     end
   end
 end
