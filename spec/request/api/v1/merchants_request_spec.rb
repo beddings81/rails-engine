@@ -42,7 +42,7 @@ describe 'Merchant API', type: :request do
 
         expect(merchants).to have_key(:errors)
         expect(merchants[:errors]).to be_a(Array)
-        expect(merchants[:errors][0]).to eq("There are no merchants in the database")
+        expect(merchants[:errors][0]).to eq("The database is empty")
       end
     end
   end

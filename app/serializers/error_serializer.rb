@@ -9,13 +9,19 @@ class ErrorSerializer
   def self.empty_database_error
     {
       message: "The query could not be completed",
-      errors: ["There are no merchants in the database"]
+      errors: ["The database is empty"]
     }
   end
 
   def self.query_error
     {
       data: {}
+    }
+  end
+
+  def self.price_error
+    {
+      errors: {}
     }
   end
 end
